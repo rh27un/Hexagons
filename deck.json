@@ -1,0 +1,41 @@
+{
+	"Cards": [
+		{
+			"CardName": "TestCard",
+			"Color": null,
+			"ImagePath": null,
+			"Tags": [
+				"Test",
+				"Card"
+			],
+			"Rules": [
+				{
+					"Tag": "Test",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": "MaxHealth",
+						"Additive": 0,
+						"Multiplier": 2
+					}
+				}
+			],
+			"Effects": [
+				{
+					"Special": "laserbeam",
+					"SpecialReadable": "Changes primary attack to a laser beam",
+					"StatType": null,
+					"Additive": 0,
+					"Multiplier": 0
+				},
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackDamage",
+					"Additive": 0.5,
+					"Multiplier": 0
+				}
+			]
+		}
+	]
+}

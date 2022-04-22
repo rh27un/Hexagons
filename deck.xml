@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<Deck xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Cards>
+    <Card>
+      <cardName>TestCard</cardName>
+      <color>
+        <r>1</r>
+        <g>1</g>
+        <b>1</b>
+        <a>1</a>
+      </color>
+      <imagePath />
+      <tags>
+        <string>Test</string>
+        <string>Card</string>
+      </tags>
+      <Rules>
+        <Rule>
+          <tag>Test</tag>
+          <effect>
+            <type>MaxHealth</type>
+            <additive>0</additive>
+            <multiplier>2</multiplier>
+          </effect>
+        </Rule>
+      </Rules>
+      <Effects>
+        <Effect>
+          <special>laserbeam</special>
+          <specialReadable>Changes primary attack to a laser beam</specialReadable>
+          <type>MaxHealth</type>
+          <additive>0</additive>
+          <multiplier>0</multiplier>
+        </Effect>
+        <Effect>
+          <type>AttackDamage</type>
+          <additive>0.5</additive>
+          <multiplier>0</multiplier>
+        </Effect>
+      </Effects>
+    </Card>
+  </Cards>
+</Deck>

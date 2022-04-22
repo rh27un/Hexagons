@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbdbce1b9a4051f4bb175ea0090ffb13, type: 3}
+  m_Name: RangedAttack
+  m_EditorClassIdentifier: 
+  approachPlayerWant: 0
+  avoidPlayerWant: 0
+  approachNearestWant: 0
+  avoidNearestWant: 1
+  avoidWallWant: 1
+  attackTime: 0.4
+  stateCycle: 0.5
