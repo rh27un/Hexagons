@@ -5,15 +5,20 @@ using UnityEngine;
 public class Projectile : MonoBehaviour
 {
 	public float speed;
+	public string targetTag;
+	public float damage;
 	protected void Update()
 	{
 		transform.position += transform.forward * speed * Time.deltaTime;
 	}
 	private void OnTriggerEnter(Collider other)
 	{
-		if (other.tag == "Player")
+		if (other.tag == targetTag)
 		{
-			other.GetComponent<PlayerHealth>().Damage(10f);
+			if(other.GetComponent<Health>().Damage(damage))
+				Destroy(gameObject);
+		} else if(other.tag == "Wall")
+		{
 			Destroy(gameObject);
 		}
 	}

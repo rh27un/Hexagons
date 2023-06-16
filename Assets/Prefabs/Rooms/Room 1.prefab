@@ -16,6 +16,10 @@ MonoBehaviour:
   overHeal: 0
   diePrefab: {fileID: 423251357187315730, guid: e473f208735bc884eafdf9219e7502ca,
     type: 3}
+  coinDrop: {fileID: 8850183793532589728, guid: bdbd36c46151cc542978bdaf2298de2d,
+    type: 3}
+  healDrop: {fileID: 8850183793532589728, guid: 3e37166c7b91d814aa61bb199499b7e8,
+    type: 3}
 --- !u!1 &3905534853282277759
 GameObject:
   m_ObjectHideFlags: 0
@@ -66,6 +70,10 @@ MonoBehaviour:
   overHeal: 0
   diePrefab: {fileID: 423251357187315730, guid: e473f208735bc884eafdf9219e7502ca,
     type: 3}
+  coinDrop: {fileID: 8850183793532589728, guid: bdbd36c46151cc542978bdaf2298de2d,
+    type: 3}
+  healDrop: {fileID: 8850183793532589728, guid: 3e37166c7b91d814aa61bb199499b7e8,
+    type: 3}
 --- !u!114 &3752067583856184127
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -81,6 +89,10 @@ MonoBehaviour:
   max: 100
   overHeal: 0
   diePrefab: {fileID: 423251357187315730, guid: e473f208735bc884eafdf9219e7502ca,
+    type: 3}
+  coinDrop: {fileID: 8850183793532589728, guid: bdbd36c46151cc542978bdaf2298de2d,
+    type: 3}
+  healDrop: {fileID: 8850183793532589728, guid: 3e37166c7b91d814aa61bb199499b7e8,
     type: 3}
 --- !u!114 &5198535411720834649
 MonoBehaviour:
@@ -123,6 +135,10 @@ MonoBehaviour:
   max: 100
   overHeal: 0
   diePrefab: {fileID: 423251357187315730, guid: e473f208735bc884eafdf9219e7502ca,
+    type: 3}
+  coinDrop: {fileID: 8850183793532589728, guid: bdbd36c46151cc542978bdaf2298de2d,
+    type: 3}
+  healDrop: {fileID: 8850183793532589728, guid: 3e37166c7b91d814aa61bb199499b7e8,
     type: 3}
 --- !u!1001 &938257961913261163
 PrefabInstance:

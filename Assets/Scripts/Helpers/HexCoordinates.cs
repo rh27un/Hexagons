@@ -44,7 +44,6 @@ public struct HexCoordinates {
 		return new HexCoordinates(x - z / 2, z);
 	}
 
-
 	public static HexCoordinates FromPosition (Vector3 position) {
 		float x = position.x / (HexMetrics.innerRadius * 2f);
 		float y = -x;
@@ -81,4 +80,7 @@ public struct HexCoordinates {
 	public string ToStringOnSeparateLines () {
 		return X.ToString() + "\n" + Y.ToString() + "\n" + Z.ToString();
 	}
+
+	public static bool operator ==(HexCoordinates lhs, HexCoordinates rhs) => lhs.X == rhs.X && lhs.Y == rhs.Y && lhs.Z == rhs.Z;
+	public static bool operator !=(HexCoordinates lhs, HexCoordinates rhs) => !lhs.Equals(rhs);
 }

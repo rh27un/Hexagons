@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 public class PlayerHealth : Health
@@ -8,22 +9,51 @@ public class PlayerHealth : Health
 	public float bloodScale;
 	public Image healthBar;
 	protected bool invincible;
-	public override void Damage(float damage)
+	[SerializeField]
+	protected GameObject gameOver;
+
+	protected string[] youDieds = new string[11]
+	{
+		"died",
+		"expired",
+		"perished",
+		"succumbed",
+		"croaked",
+		"departed",
+		"are no more",
+		"breathed your last",
+		"ceased to exist",
+		"gave up the ghost",
+		"kicked the bucket"
+	};
+	public void Heal(float amount)
+	{
+		base.Damage(-amount);
+		if (healthBar == null)
+			healthBar = GameObject.Find("Healthbar").GetComponent<Image>();
+		healthBar.fillAmount = GetHealthPercentage();
+	}
+	public override bool Damage(float damage)
 	{
 		if (invincible)
-			return;
+			return false;
 		base.Damage(damage);
 		blood.AddBlood(damage * bloodScale);
 		if (healthBar == null)
 			healthBar = GameObject.Find("Healthbar").GetComponent<Image>();
 		healthBar.fillAmount = GetHealthPercentage();
 		StartCoroutine("DamageInvincibility");
+		return true;
 	}
 	public override void Die()
 	{
-		blood.isDead = true;
-		GetComponent<Player>().enabled = false;
-		Debug.Log("Dead");
+		if (!blood.isDead)
+		{
+			blood.isDead = true;
+			GetComponent<Player>().enabled = false;
+			gameOver.SetActive(true);
+			gameOver.GetComponentInChildren<TextMeshProUGUI>().text = "You " + youDieds[Random.Range(0, youDieds.Length)];
+		}
 	}
 	public void SetToMax()
 	{

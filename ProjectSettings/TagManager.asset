@@ -10,6 +10,8 @@ TagManager:
   - HandContent
   - Fog
   - Test
+  - Wall
+  - InteractText
   layers:
   - Default
   - TransparentFX
@@ -22,8 +24,8 @@ TagManager:
   - PostProcessing
   - PlayerLook
   - Wall
-  - 
-  - 
+  - Door
+  - Secret
   - 
   - 
   - 

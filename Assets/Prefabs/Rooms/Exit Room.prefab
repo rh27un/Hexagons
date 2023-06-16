@@ -122,6 +122,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2bf11a819d51004ebbe6faebe78cd6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  text: {fileID: 0}
+  readableName: Exit Floor
   level: {fileID: 0}
 --- !u!1 &3905534853282277759
 GameObject:

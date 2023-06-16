@@ -1,29 +1,20 @@
 {
 	"Cards": [
 		{
-			"CardName": "TestCard",
+			"CardName": "Basic Attack",
 			"Color": null,
 			"ImagePath": null,
+			"Rarity": 0,
 			"Tags": [
-				"Test",
-				"Card"
+				"Magic",
+				"Melee",
+				"Slash"
 			],
-			"Rules": [
-				{
-					"Tag": "Test",
-					"Effect": {
-						"Special": null,
-						"SpecialReadable": null,
-						"StatType": "MaxHealth",
-						"Additive": 0,
-						"Multiplier": 2
-					}
-				}
-			],
+			"Rules": [],
 			"Effects": [
 				{
-					"Special": "laserbeam",
-					"SpecialReadable": "Changes primary attack to a laser beam",
+					"Special": "Slash",
+					"SpecialReadable": "Primary Attack: Slash",
 					"StatType": null,
 					"Additive": 0,
 					"Multiplier": 0
@@ -32,7 +23,533 @@
 					"Special": null,
 					"SpecialReadable": null,
 					"StatType": "AttackDamage",
+					"Additive": 50,
+					"Multiplier": 0
+				},
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackRange",
+					"Additive": 2,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Boots of Speed",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 1,
+			"Tags": [
+				"Armour",
+				"Enchanted",
+				"Feet"
+			],
+			"Rules": [],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "Speed",
+					"Additive": 2,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Socks",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 2,
+			"Tags": [
+				"Armour",
+				"Enchanted",
+				"Feet"
+			],
+			"Rules": [
+				{
+					"Tag": "Feet",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": null,
+						"Additive": 0,
+						"Multiplier": 2
+					}
+				}
+			],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "DashDistance",
+					"Additive": 0.1,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Power Fist",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 1,
+			"Tags": [
+				"Magic",
+				"Enchanted",
+				"Item"
+			],
+			"Rules": [
+				{
+					"Tag": "Melee",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": "Knockback",
+						"Additive": 1,
+						"Multiplier": 0
+					}
+				}
+			],
+			"Effects": []
+		},
+		{
+			"CardName": "Dashing Trousers",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 1,
+			"Tags": [
+				"Armour",
+				"Enchanted",
+				"Legs"
+			],
+			"Rules": [],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "DashDistance",
 					"Additive": 0.5,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Belt of Justice",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 2,
+			"Tags": [
+				"Armour",
+				"Enchanted",
+				"Gold"
+			],
+			"Rules": [
+				{
+					"Tag": "Legs",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": null,
+						"Additive": 0,
+						"Multiplier": 1.1
+					}
+				}
+			],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "MaxHealth",
+					"Additive": 0.3,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Vitality Chestplate",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 1,
+			"Tags": [
+				"Armour",
+				"Enchanted",
+				"Chest"
+			],
+			"Rules": [],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "MaxHealth",
+					"Additive": 5,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Knight\u0027s Sword",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 3,
+			"Tags": [
+				"Weapon",
+				"Melee",
+				"Steel"
+			],
+			"Rules": [],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackDamage",
+					"Additive": 10,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Arm Lengthener",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 1,
+			"Tags": [
+				"Item",
+				"Enchanted",
+				"Hands"
+			],
+			"Rules": [
+				{
+					"Tag": "Melee",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": "AttackRange",
+						"Additive": 0.5,
+						"Multiplier": 0
+					}
+				}
+			],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackAngle",
+					"Additive": 0.5,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Steel Polish",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 1,
+			"Tags": [
+				"Item",
+				"Enchanted"
+			],
+			"Rules": [
+				{
+					"Tag": "Steel",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": null,
+						"Additive": 0,
+						"Multiplier": 1.5
+					}
+				}
+			],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "Stun",
+					"Additive": 0.1,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Staff of Prester",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 1,
+			"Tags": [
+				"Magic",
+				"Blessed",
+				"Ranged"
+			],
+			"Rules": [],
+			"Effects": [
+				{
+					"Special": "Projectile",
+					"SpecialReadable": "Primary Attack: Projectile",
+					"StatType": null,
+					"Additive": 0,
+					"Multiplier": 0
+				},
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackRange",
+					"Additive": 0.5,
+					"Multiplier": 0
+				},
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "Blessing",
+					"Additive": 0.2,
+					"Multiplier": 0
+				},
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackDamage",
+					"Additive": 50,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Crown of Burdum",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 4,
+			"Tags": [
+				"Armour",
+				"Blessed",
+				"Head"
+			],
+			"Rules": [
+				{
+					"Tag": "Blessed",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": null,
+						"Additive": 0,
+						"Multiplier": 2
+					}
+				}
+			],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "Blessing",
+					"Additive": 0.3,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Sword of Eupall",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 3,
+			"Tags": [
+				"Weapon",
+				"Melee",
+				"Cursed",
+				"Steel"
+			],
+			"Rules": [],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackDamage",
+					"Additive": 5,
+					"Multiplier": 0
+				},
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "Blessing",
+					"Additive": -0.5,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Lucky Charm",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 1,
+			"Tags": [
+				"Item",
+				"Enchanted",
+				"Gold"
+			],
+			"Rules": [
+				{
+					"Tag": "Item",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": "Luck",
+						"Additive": 0.1,
+						"Multiplier": 0
+					}
+				}
+			],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "Luck",
+					"Additive": 1,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Power Enhancer",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 1,
+			"Tags": [
+				"Item",
+				"Enchanted"
+			],
+			"Rules": [
+				{
+					"Tag": "Enchanted",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": null,
+						"Additive": 0,
+						"Multiplier": 1.2
+					}
+				}
+			],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackDamage",
+					"Additive": 0.1,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Penance",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 3,
+			"Tags": [
+				"Item",
+				"Blessed"
+			],
+			"Rules": [
+				{
+					"Tag": "Enchanted",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": null,
+						"Additive": 0,
+						"Multiplier": 0.1
+					}
+				},
+				{
+					"Tag": "Mythical",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": null,
+						"Additive": 0,
+						"Multiplier": 0.1
+					}
+				}
+			],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "Blessing",
+					"Additive": 10,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Wooden Knife",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 0,
+			"Tags": [
+				"Weapon",
+				"Wood"
+			],
+			"Rules": [
+				{
+					"Tag": "Melee",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": "AttackDamage",
+						"Additive": 1,
+						"Multiplier": 0
+					}
+				}
+			],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackDamage",
+					"Additive": 1,
+					"Multiplier": 0
+				},
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackRange",
+					"Additive": -0.5,
+					"Multiplier": 0
+				}
+			]
+		},
+		{
+			"CardName": "Steel Axe",
+			"Color": null,
+			"ImagePath": null,
+			"Rarity": 0,
+			"Tags": [
+				"Weapon",
+				"Melee",
+				"Steel"
+			],
+			"Rules": [
+				{
+					"Tag": "Wood",
+					"Effect": {
+						"Special": null,
+						"SpecialReadable": null,
+						"StatType": null,
+						"Additive": 0,
+						"Multiplier": 1.1
+					}
+				}
+			],
+			"Effects": [
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackDamage",
+					"Additive": 5,
+					"Multiplier": 0
+				},
+				{
+					"Special": null,
+					"SpecialReadable": null,
+					"StatType": "AttackAngle",
+					"Additive": 0.3,
 					"Multiplier": 0
 				}
 			]

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using TMPro;
 
 public class HexMapEditor : MonoBehaviour {
 
@@ -33,7 +34,7 @@ public class HexMapEditor : MonoBehaviour {
 			var newPanel = Instantiate(handTogglePrefab);
 			newPanel.transform.SetParent(content);
 			newPanel.transform.localPosition = new Vector3(panelOffset * i, 0, 0);
-			var text = newPanel.GetComponentInChildren<Text>();
+			var text = newPanel.GetComponentInChildren<TextMeshPro>();
 			text.text = card.CardName;
 			var toggle = newPanel.GetComponentInChildren<Toggle>();
 			toggle.onValueChanged.AddListener(delegate
@@ -60,13 +61,30 @@ public class HexMapEditor : MonoBehaviour {
 	}
 
 	void HandleInput () {
+		if (activeCard == null)
+			return;
 		Ray inputRay = hexCam.ScreenPointToRay(Input.mousePosition);
 		RaycastHit hit;
 		if (Physics.Raycast(inputRay, out hit))
 		{
 			HexCoordinates coordinates = hexGrid.GetCoordinatesFromPosition(hit.point);
-			hexGrid.PlaceCard(coordinates, activeCard);
+			if(hexGrid.PlaceCard(coordinates, activeCard))
+				RemoveCard(activeCard);
 
+		}
+	}
+
+	public void RemoveCard(HexCardMetrics card)
+	{
+		activeCard = null;
+		cards.Remove(card);
+		content.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Math.Abs(panelOffset * cards.Count));
+		foreach (var toggle in GameObject.FindGameObjectWithTag("HandContent").GetComponentsInChildren<Toggle>())
+		{
+			if (toggle.isOn)
+			{
+				Destroy(toggle.gameObject);
+			}
 		}
 	}
 
@@ -90,10 +108,12 @@ public class HexMapEditor : MonoBehaviour {
 		content.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Math.Abs(panelOffset * cards.Count));
 		
 		var newPanel = Instantiate(handTogglePrefab);
-		newPanel.transform.SetParent(content);
-		newPanel.transform.localPosition = new Vector3(panelOffset * cards.Count, 0, 0);
-		var text = newPanel.GetComponentInChildren<Text>();
-		text.text = card.CardName;
+		newPanel.transform.SetParent(content, false);
+		//newPanel.transform.localPosition = new Vector3(panelOffset * cards.Count, 0, 0);
+		var texts = newPanel.GetComponentsInChildren<TextMeshProUGUI>();
+		texts[0].text = card.CardName;
+		texts[1].text = card.TagsToString();
+		texts[2].text = card.DetailsToString();
 		var toggle = newPanel.GetComponentInChildren<Toggle>();
 		toggle.onValueChanged.AddListener(delegate
 		{

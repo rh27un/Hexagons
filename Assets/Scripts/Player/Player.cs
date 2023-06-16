@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+using System.Xml.Schema;
 
 public class Player : MonoBehaviour
 {
@@ -34,11 +36,24 @@ public class Player : MonoBehaviour
 
 	protected float lastSlash;
 	protected float lastDash;
+
+	protected int coins;
+
+	protected TextMeshProUGUI coinsText;
+	[SerializeField]
+	protected GameObject projectilePrefab;
+	[SerializeField]
+	protected float projectileSize;
+
+	[SerializeField]
+	protected MeshRenderer doorMesh;
+	
 	private void Awake()
 	{
 		mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
 		fogGrid = GameObject.FindGameObjectWithTag("Fog").GetComponent<FogGrid>();
 		cameraOffset = mainCamera.transform.position - transform.position;
+		coinsText = GameObject.Find("CoinsText").GetComponent<TextMeshProUGUI>();
 		characterController = GetComponent<CharacterController>();
 	}
 	private void Start()
@@ -49,6 +64,7 @@ public class Player : MonoBehaviour
 		health = GetComponent<PlayerHealth>();
 		health.max = Stat(StatType.MaxHealth);
 		health.SetToMax();
+		//doorMesh.SetActive(false);
 	}
 
 	private void FixedUpdate()
@@ -68,8 +84,7 @@ public class Player : MonoBehaviour
 
 		if (deltaPos.sqrMagnitude > 0)
 		{
-			characterController.Move(deltaPos * Time.fixedDeltaTime);
-			fogGrid.UpdateFog(transform.position);
+			Move(deltaPos * Time.fixedDeltaTime);
 		}
 		mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, transform.position + cameraOffset, camFollowStiffness);
 		mainCamera.transform.position += mainCamera.transform.right * Mathf.Lerp(-1, 1, Mathf.PerlinNoise(0f, Time.time * shakeSpeed)) * cameraShake * shakeScale;
@@ -83,35 +98,52 @@ public class Player : MonoBehaviour
 		if (Input.GetMouseButton(0) && Time.time > lastSlash + Stat(StatType.AttackCooldown) && !gameManager.isPaused)
 		{
 			lastSlash = Time.time;
-			Vector3 slash = transform.forward * slashDistance;
-			characterController.Move(slash);
-			fogGrid.UpdateFog(transform.position);
-			slashParticles[slashDir % 2].Play();
-			slashDir++;
-			var collisions = Physics.OverlapSphere(transform.position, Stat(StatType.AttackRange));
-			foreach (var col in collisions)
+			foreach (SpecialEffect effect in stats.GetSpecials())
 			{
-				if (Vector3.Angle(transform.forward, col.transform.position - transform.position) < Stat(StatType.AttackAngle))
+				if (effect == SpecialEffect.Slash)
 				{
-					if (col.gameObject.tag == "Enemy")
-					{
-						RaycastHit hit;
-						if (Physics.Raycast(transform.position, col.transform.position - transform.position, out hit, 10f))
-						{
-							col.gameObject.GetComponent<Enemy>().Hit(transform.position, Stat(StatType.AttackDamage));
-							cameraShake = 1f;
-						}
-					}
+					Slash();
+				}
+				if (effect == SpecialEffect.Projectile)
+				{
+					Projectile();
+				}
+				if (effect == SpecialEffect.Boomerang)
+				{
+
+				}
+				if (effect == SpecialEffect.Ricochet)
+				{
+
+				}
+				if (effect == SpecialEffect.Beam)
+				{
+
 				}
 			}
+
 		}
 		if (Input.GetMouseButton(1) && Time.time > lastDash + Stat(StatType.DashCooldown) && !gameManager.isPaused)
 		{
 			lastDash = Time.time;
 			Vector3 dash = transform.forward * Stat(StatType.DashDistance);
-			characterController.Move(dash);
-			fogGrid.UpdateFog(transform.position);
+			Move(dash);
 			health.Dodge(0.7f);
+		}
+	}
+
+	protected void Move(Vector3 vector)
+	{
+		characterController.Move(vector);
+		if (fogGrid.UpdateFog(transform.position))
+		{
+			Physics.IgnoreLayerCollision(0, 11, false);
+			doorMesh.enabled = true;
+		}
+		if (!fogGrid.AnyEnemyInRoom(transform.position))
+		{
+			Physics.IgnoreLayerCollision(0, 11, true);
+			doorMesh.enabled = false;
 		}
 	}
 
@@ -120,8 +152,58 @@ public class Player : MonoBehaviour
 		transform.position = position;
 		mainCamera.transform.position = transform.position + cameraOffset;
 	}
-	private float Stat(StatType type)
+	public float Stat(StatType type)
 	{
 		return stats.stats[type];
 	}
+
+	public void AddCoin(int _coins)
+	{
+		coins += _coins;
+		coinsText.text = coins.ToString();
+	}
+
+	public void Heal(float amt)
+	{
+		health.Damage(-amt);
+	}
+
+	protected void Slash()
+	{
+		Vector3 slash = transform.forward * slashDistance;
+		Move(slash);
+		slashParticles[slashDir % 2].Play();
+		slashDir++;
+		var collisions = Physics.OverlapSphere(transform.position, Stat(StatType.AttackRange));
+		foreach (var col in collisions)
+		{
+			if (Vector3.Angle(transform.forward, col.transform.position - transform.position) < Stat(StatType.AttackAngle))
+			{
+				if (col.gameObject.tag == "Enemy")
+				{
+					RaycastHit hit;
+					if (Physics.Raycast(transform.position, col.transform.position - transform.position, out hit, 10f))
+					{
+						if (hit.collider == col)
+						{
+							col.gameObject.GetComponent<Enemy>().Hit(transform.position, Stat(StatType.AttackDamage));
+							cameraShake = 1f;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	protected void Projectile()
+	{
+		var angle = Random.Range(-Stat(StatType.AttackAngle) / 2, Stat(StatType.AttackAngle) / 2);
+		var rotation = transform.rotation * Quaternion.AngleAxis(angle, Vector3.up);
+		var projectile = Instantiate(projectilePrefab, transform.position, rotation);
+		projectile.transform.localScale = Vector3.one * Stat(StatType.AttackAngle) * projectileSize;
+		projectile.GetComponent<Projectile>().targetTag = "Enemy";
+		projectile.GetComponent<Projectile>().damage = Stat(StatType.AttackDamage);
+		Destroy(projectile, Stat(StatType.AttackRange));
+	}
+
 }

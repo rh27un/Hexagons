@@ -9,13 +9,14 @@ public class Health : MonoBehaviour
 	protected float cur;
 	public bool overHeal;
 	public GameObject diePrefab;
-
+	public GameObject coinDrop;
+	public GameObject healDrop;
 	public void Start()
 	{
 		cur = max;
 	}
 
-	public virtual void Damage(float damage)
+	public virtual bool Damage(float damage)
 	{
 		if (!overHeal)
 			cur = Mathf.Clamp(cur - damage, 0f, max);
@@ -26,6 +27,7 @@ public class Health : MonoBehaviour
 		{
 			Die();
 		}
+		return true;
 	}
 	public void Update()
 	{
@@ -36,6 +38,18 @@ public class Health : MonoBehaviour
 	{
 		Destroy(gameObject);
 		Destroy(Instantiate(diePrefab, transform.position, Quaternion.identity), 0.5f);
+		float value = Random.value;
+		if(value < 0.5f)
+		{
+			if(value < 0.2f)
+			{
+				Instantiate(healDrop, transform.position, Quaternion.identity);
+			} 
+			else
+			{
+				Instantiate(coinDrop, transform.position, Quaternion.identity);
+			}
+		}
 	}
 
 	public float GetHealthPercentage()

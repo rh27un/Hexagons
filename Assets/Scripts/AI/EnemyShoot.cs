@@ -15,7 +15,13 @@ public class EnemyShoot : MonoBehaviour, IEnemyAttack
 		if (Physics.Raycast(transform.position, transform.forward, out hit, findPlayerRadius))
 		{
 			if (hit.collider.gameObject.tag == "Player")
-				Destroy(Instantiate(projectilePrefab, transform.position, transform.rotation), 5f);
+			{
+				var projectile = Instantiate(projectilePrefab, transform.position, transform.rotation);
+				projectile.GetComponent<Projectile>().targetTag = "Player";
+				projectile.GetComponent<Projectile>().damage = 10f;
+				Destroy(projectile, 5f);
+			}
+
 		}
 	}
 }

@@ -12,10 +12,12 @@ public class CardCreator : MonoBehaviour
 
 	private void Start()
 	{
-		var serializer = new XmlSerializer(typeof(Deck));
-		var stream = new FileStream(deckPath, FileMode.Open);
-		deck = serializer.Deserialize(stream) as Deck;
-		stream.Close();
+		//var serializer = new XmlSerializer(typeof(Deck));
+		//var stream = new FileStream(deckPath, FileMode.Open);
+		//deck = serializer.Deserialize(stream) as Deck;
+		//stream.Close();
+		string json = File.ReadAllText(deckPath);
+		deck = JsonUtility.FromJson<Deck>(json);
 		Debug.Log(deck.ToString());
 	}
 

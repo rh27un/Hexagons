@@ -2,7 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum WallType
+{
+	None = 0,
+	Wall,
+	Door,
+	Secret
+}
 public class HexRoom : HexCell
 {
-	public bool[] walls = new bool[6];
+	public WallType[] walls = new WallType[6];
 }

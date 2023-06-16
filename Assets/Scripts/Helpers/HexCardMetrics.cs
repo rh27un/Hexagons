@@ -110,6 +110,8 @@ public class HexCardMetrics
 	
 	public List<Effect> Effects;        // Effects of this card
 
+	public int Rarity;
+
 	public override string ToString()
 	{
 		var newString = $"{CardName}: ";
@@ -243,11 +245,11 @@ public class Effect
 
 		if(Multiplier == 0)
 		{
-			return $"{(string.IsNullOrWhiteSpace(By) ? "" : "<color=#FFFFFF>")} {(Additive >= 0f ? "+" : "-")} {Additive} {StatType}{(string.IsNullOrWhiteSpace(By) ? "" : $" ({By})</color>")}";
+			return $"{(string.IsNullOrWhiteSpace(By) ? "" : "<color=#FF00FF>")} {(Additive >= 0f ? "+" : "")} {Additive} {StatType}{(string.IsNullOrWhiteSpace(By) ? "" : $" ({By})</color>")}";
 		}
 		else
 		{
-			return $"{(string.IsNullOrWhiteSpace(By) ? "" : "<color=#FFFFFF>")}x{Multiplier}{(string.IsNullOrWhiteSpace(By) ? "" : $" ({By})</color>")}";
+			return $"{(string.IsNullOrWhiteSpace(By) ? "" : "<color=#FF00FF>")}x{Multiplier}{(string.IsNullOrWhiteSpace(By) ? "" : $" ({By})</color>")}";
 		}
 	}
 

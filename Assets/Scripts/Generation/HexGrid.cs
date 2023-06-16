@@ -69,6 +69,14 @@ public class HexGrid : MonoBehaviour {
 		HexCoordinates coordinates = HexCoordinates.FromPosition(position);
 		return coordinates;
 	}
+	public Vector3 GetPositionFromCoordinates(HexCoordinates coords)
+	{
+		Vector3 position;
+		position.x = (coords.X + coords.Z * 0.5f) * (HexMetrics.innerRadius * 2f);
+		position.y = 0f;
+		position.z = coords.Z * (HexMetrics.outerRadius * 1.5f);
+		return transform.TransformPoint(position);
+	}
 
 	public void ColorCell(HexCoordinates coordinates, Color color)
 	{
@@ -98,11 +106,11 @@ public class HexGrid : MonoBehaviour {
 		label.rectTransform.SetParent(gridCanvas.transform, false);
 		label.rectTransform.anchoredPosition =
 			new Vector2(position.x, position.z);
-		label.text = cell.coordinates.ToStringOnSeparateLines();
+		//label.text = cell.coordinates.ToStringOnSeparateLines();
 		return cell;
 	}
 
-	public void PlaceCard(HexCoordinates coordinates, HexCardMetrics data, bool placeAnywhere = false)
+	public bool PlaceCard(HexCoordinates coordinates, HexCardMetrics data, bool placeAnywhere = false)
 	{
 
 		int i = IndexFromCoordinates(coordinates);
@@ -114,8 +122,8 @@ public class HexGrid : MonoBehaviour {
 			card.transform.SetParent(transform, false);
 			card.transform.localPosition = cells[i].transform.position;
 			card.coordinates = coordinates;
-			card.color = data.Color;
-
+			card.color = Color.white; // TODO: get colour from data
+			
 			Destroy(cells[i].gameObject);
 			cells[i] = card;
 
@@ -137,7 +145,18 @@ public class HexGrid : MonoBehaviour {
 					CalculateCardRules((HexCard)cell);
 				}
 			}
+			foreach(var effect in data.Effects)
+			{
+				if (!string.IsNullOrEmpty(effect.Special))
+				{
+					stats.AddSpecial(effect.Special);
+				}
+			}
+
+			UpdateStats();
+			return true;
 		}
+		return false;
 	}
 
 	public HexCell GetCell(HexCoordinates coordinates)
@@ -194,6 +213,14 @@ public class HexGrid : MonoBehaviour {
 				}
 			}
 		}
+		//foreach(var effect in data.Effects)
+		//{
+		//	if (!string.IsNullOrEmpty(effect.StatType))
+		//	{
+		//		StatType statType = (StatType)Enum.Parse(typeof(StatType), effect.StatType);
+		//		stats.UpdateStats(statType, effect.Additive);
+		//	}
+		//}
 		//if(card.data is AbilityCardMetrics)
 		//{
 		//	var data = (AbilityCardMetrics)card.data;
@@ -266,5 +293,39 @@ public class HexGrid : MonoBehaviour {
 				img.enabled = true;
 			}
 		}
+	}
+
+	public void UpdateStats()
+	{
+		var currentStats = new Dictionary<StatType, float>(stats.baseStats);
+		foreach(var cell in cells)
+		{
+			if(cell != null && cell is HexCard)
+			{
+				var card = (HexCard)cell;
+				foreach(var effect in card.actualData.multipliedEffects)
+				{
+					if(!string.IsNullOrEmpty(effect.StatType))
+					{
+						StatType statType = (StatType)Enum.Parse(typeof(StatType), effect.StatType);
+						currentStats[statType] += effect.Additive;
+					}
+				}
+				//foreach(var effect in card.actualData.effectsFromRules)
+				//{
+				//	if (effect != null)
+				//	{
+				//		if (!string.IsNullOrEmpty(effect.StatType))
+				//		{
+				//			StatType statType = (StatType)Enum.Parse(typeof(StatType), effect.StatType);
+				//			currentStats[statType] += effect.Additive;
+				//		}
+				//	}
+				//}
+			}
+		}
+
+		stats.stats = new Dictionary<StatType, float>(currentStats);
+		stats.UpdateStatsPanel();
 	}
 }
