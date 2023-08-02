@@ -5,8 +5,25 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 public class LevelGrid : HexGrid
 {
+
+	public const byte BIGROOM = 0b111111;
+	public const byte MEDIUMROOM = 0b110000;
+	public const byte SMALLROOM = 0b000000;
+	public const byte LONGROOM = 0b100100;
+	public const byte SHORTROOM = 0b100000;
+	public const byte CROSSROOM = 0b101010;
+	public const byte LCURVEDROOM = 0b101000;
+	public const byte RCURVEDROOM = 0b100010;
+	public const byte LRHOMBOIDROOM = 0b111000;
+	public const byte RRHOMBOIDROOM = 0b110001;
+	public const byte SEMIROOM = 0b111100;
+	public const byte CRESCENTROOM = 0b111110;
+	public const byte BONEROOM = 0b110110;
+	public const byte PICKROOM = 0b111010;
+
 	[SerializeField]
 	protected int roomsPerPath;
 	[SerializeField]
@@ -31,18 +48,20 @@ public class LevelGrid : HexGrid
 
 	protected WallMesh wallMesh;
 	protected List<HexRoom> rooms = new List<HexRoom>();
+	protected Dictionary<int, HexRoom> roomdictionary = new Dictionary<int, HexRoom>();
 	protected List<GameObject> generatedObjects = new List<GameObject>();
 	protected Player player;
 	protected LevelName levelName;
 	protected GameManager gameManager;
 	protected bool isFirstLevel = true;
+	int rot = 0;
 	// Start is called before the first frame update
 	protected override void Start()
 	{
 		hexMesh.Triangulate(cells);
 		wallMesh = GetComponentInChildren<WallMesh>();
 		//CalculateWalls();
-		wallMesh.Triangulate(rooms.ToArray());
+		wallMesh.Triangulate(roomdictionary.Values.ToArray());
 		levelName = GameObject.Find("Level Name").GetComponent<LevelName>();
 	}
 	private void Update()
@@ -54,6 +73,7 @@ public class LevelGrid : HexGrid
 	}
 	public void Regenerate()
 	{
+		rot++;
 		foreach (var cell in cells)
 		{
 			Destroy(cell.gameObject);
@@ -71,13 +91,136 @@ public class LevelGrid : HexGrid
 				CreateCell(x, z, i++);
 			}
 		}
-		Generate();
+		NewGenerate();
 		hexMesh.Triangulate(cells);
-		wallMesh.Triangulate(rooms.ToArray());
+		wallMesh.Triangulate(roomdictionary.Values.ToArray());
 		GameObject.Find("Fog Grid").GetComponent<FogGrid>().RegenerateFog();
+	}
+
+	protected byte RotateRoom(byte room, int rotations)
+	{
+		rotations = rotations % 6;
+		for(int i = 0; i < rotations; i++)
+		{
+			byte mask = 0b000001;
+			byte lastbit = (byte)(room & mask);
+			room >>= 1;
+			lastbit <<= 5;
+			room |= lastbit;
+		}
+		return room;
+	}
+
+	protected bool IsBitSet(byte val, int bit)
+	{
+		byte mask = (byte)(1 << bit);
+		byte c = (byte)(val & mask);
+		return c > 0;
+	}
+
+	protected HexRoom NewPlaceRoom(HexCoordinates coords, byte neighboursInRoom, int roomId)
+	{
+		int i = IndexFromCoordinates(coords);
+
+		if (cells[i] != null)
+		{
+			if (rooms.Contains((HexRoom)cells[i]))
+			{
+				return (HexRoom)cells[i];
+			}
+			HexRoom room = (HexRoom)Instantiate<HexCell>(cellPrefab);
+			room.walls = new WallType[6]; // dont fucking ask me
+			room.transform.SetParent(transform, false);
+			room.roomId = roomId;
+			room.transform.localPosition = cells[i].transform.localPosition;
+			room.coordinates = coords;
+			room.color = Color.white;
+			roomdictionary.Add(i, room);
+			for (int j = 0; j < 6; j++)
+			{
+				if (IsBitSet(neighboursInRoom, j))
+				{
+					var ncoords = coords.GetNeighbours()[j];
+					int ni = IndexFromCoordinates(ncoords);
+					if (cells[ni] != null)
+					{
+						if (rooms.Contains((HexRoom)cells[ni]))
+						{
+							break;
+						}
+						HexRoom nroom = (HexRoom)Instantiate<HexCell>(cellPrefab);
+						nroom.walls = new WallType[6]; // dont fucking ask me
+						nroom.transform.SetParent(transform, false);
+						nroom.roomId = roomId;
+						nroom.transform.localPosition = cells[ni].transform.localPosition;
+						nroom.coordinates = ncoords;
+						nroom.color = Color.white;
+						roomdictionary.Add(ni, nroom);
+					}
+				}
+			}
+
+			Destroy(cells[i].gameObject);
+			cells[i] = room;
+			return room;
+		}
+		return null;
+	}
+	protected void NewGenerate()
+	{
+		// Set up object references
+		if (levelName == null)
+			levelName = GameObject.Find("Level Name").GetComponent<LevelName>();
+		if (gameManager == null)
+			gameManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
+
+		// find player
+		player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+
+		// clear rooms
+		roomdictionary.Clear();
+
+		// place the first room in the centre
+		var coord = HexCoordinates.FromOffsetCoordinates(width / 2, height / 2);
+		if (isFirstLevel)
+		{
+			NewPlaceRoom(coord, SHORTROOM, 0);
+			isFirstLevel = false;
+		}
+		else
+			NewPlaceRoom(coord, RotateRoom(SHORTROOM, rot), 0);
+
+
+		FigureOutWalls();
+		// put the player there
+		player.MoveTo(roomdictionary[IndexFromCoordinates(coord)].transform.position + Vector3.up);
+		levelName.NextLevel();
+		gameManager.NextLevel();
+	}
+
+	protected void FigureOutWalls()
+	{
+		foreach(var room in roomdictionary.Values)
+		{
+			var neighbours = room.coordinates.GetNeighbours();
+			for(int i = 0; i < 6; i++)
+			{
+				var neighbour = GetRoom(neighbours[i]);
+				
+				if(room.walls[i] == WallType.None)
+				{
+					if(neighbour == null || neighbour.roomId != room.roomId)
+					{
+						room.walls[i] = WallType.Wall;
+					}
+				}
+			}
+		}
 	}
 	protected override void Generate()
 	{
+		NewGenerate();
+		return;
 
 		// Set up object references
 		if (levelName == null)
@@ -312,6 +455,8 @@ public class LevelGrid : HexGrid
 	public HexRoom GetRoom(HexCoordinates coordinates)
 	{
 		int index = IndexFromCoordinates(coordinates);
+		if (!roomdictionary.ContainsKey(index))
+			return null;
 		if (coordinates.X + coordinates.Z / 2 >= width)
 			return null;
 		if (coordinates.Y > coordinates.X)
@@ -320,6 +465,6 @@ public class LevelGrid : HexGrid
 			return null;
 		if (index < 0 || index >= height * width)
 			return null;
-		return rooms[index];
+		return roomdictionary[index];
 	}
 }

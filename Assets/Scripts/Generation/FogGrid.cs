@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class FogGrid : HexGrid
 {
+	[SerializeField]
+	protected LevelGrid level;
+
 	protected override void Start()
 	{
 		hexMesh.Triangulate(cells);
@@ -34,9 +37,41 @@ public class FogGrid : HexGrid
 			Destroy(cells[IndexFromCoordinates(coords)].gameObject);
 			cells[IndexFromCoordinates(coords)] = null;
 			hexMesh.Triangulate(cells);
+			var room = level.GetRoom(coords);
+			if (room != null)
+			{
+				for (int i = 0; i < 6; i++)
+				{
+					if (room.walls[i] == WallType.None)
+					{
+						UpdateFog(coords.GetNeighbours()[i]);
+					}
+				}
+			}
 			return true;
 		}
 		return false;
+	}
+
+	protected void UpdateFog(HexCoordinates coords)
+	{
+		if (GetCell(coords) != null)
+		{
+			Destroy(cells[IndexFromCoordinates(coords)].gameObject);
+			cells[IndexFromCoordinates(coords)] = null;
+			hexMesh.Triangulate(cells);
+			var room = level.GetRoom(coords);
+			if (room != null)
+			{
+				for (int i = 0; i < 6; i++)
+				{
+					if (room.walls[i] == WallType.None)
+					{
+						UpdateFog(coords.GetNeighbours()[i]);
+					}
+				}
+			}
+		}
 	}
 
 	public bool AnyEnemyInRoom(Vector3 pos)
@@ -44,7 +79,7 @@ public class FogGrid : HexGrid
 		var coords = GetCoordinatesFromPosition(pos);
 		var middle = GetPositionFromCoordinates(coords) - Vector3.up * 2f;
 		var colliders = Physics.OverlapSphere(middle, 15f);
-w		foreach(var collider in colliders)
+		foreach(var collider in colliders)
 		{
 			if (collider.tag == "Enemy")
 			{
