@@ -10,7 +10,8 @@ public class FogGrid : HexGrid
 
 	protected override void Start()
 	{
-		hexMesh.Triangulate(cells);
+		//hexMesh.Triangulate(cells);
+
 	}
 	public void RegenerateFog()
 	{

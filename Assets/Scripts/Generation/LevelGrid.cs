@@ -5,6 +5,21 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
+public struct ValidRoom
+{
+	public ValidRoom(HexCoordinates _coords, byte _roomType, HexCoordinates _doorCell, int _doorDirection)
+	{
+		coords = _coords;
+		roomType = _roomType;
+		doorCell = _doorCell;
+		doorDirection = _doorDirection;
+	}
+
+	public HexCoordinates coords;
+	public byte roomType;
+	public HexCoordinates doorCell;
+	public int doorDirection;
+}
 
 public class LevelGrid : HexGrid
 {
@@ -23,6 +38,7 @@ public class LevelGrid : HexGrid
 	public const byte CRESCENTROOM = 0b111110;
 	public const byte BONEROOM = 0b110110;
 	public const byte PICKROOM = 0b111010;
+
 
 	[SerializeField]
 	protected int roomsPerPath;
@@ -71,11 +87,85 @@ public class LevelGrid : HexGrid
 			Regenerate();
 		}
 	}
+
+	protected List<ValidRoom> FindValidMoves(HexCoordinates coord, byte[] roomsToTry)
+	{
+		// list of valid rooms for this coordinate
+		List<ValidRoom> validRooms = new List<ValidRoom>();
+		// if this coordinate is somehow invalid
+		if (GetCell(coord) == null || GetRoom(coord) != null)
+			return validRooms;
+		HexCoordinates doorCell = new HexCoordinates();
+		int doorDir = 0;
+		foreach(byte room in roomsToTry)
+		{
+			for (int r = 0; r < 6; r++)
+			{
+				byte rotatedRoom = RotateRoom(room, r);
+				if (r > 0 && AreRoomsIdentical(room, rotatedRoom))
+					continue;
+				bool valid = true;
+				bool isConnected = false;
+				var myNeighbours = coord.GetNeighbours();
+				// for each neighbouring cell
+				for (int i = 0; i < 6; i++)
+				{
+					// we don't care if it's not part of the room
+					if (IsBitSet(rotatedRoom, i))
+					{
+						// room is invalid if any part of it is either null (out of bounds) or already occupied 
+						if (GetCell(myNeighbours[i]) == null || GetRoom(myNeighbours[i]) != null)
+						{
+							valid = false;
+							break;
+						}
+						// room has to be connected to another room to be valid
+						if (!isConnected)
+						{
+							// ooh the rare triple-for-loop
+							// gotta loop through all our neighbours to see 
+
+							var ourNeighbours = myNeighbours[i].GetNeighbours();
+							//foreach (var ourNeighbour in myNeighbours[i].GetNeighbours().Where(on => on != coord && !myNeighbours.Contains(on)))
+							for (int j = 0; j < ourNeighbours.Count(); j++)
+							{
+								var ourNeighbour = ourNeighbours[j];
+								// if this neighbouring cell both exists and consists of a room we're connected
+								if (GetCell(ourNeighbour) != null && GetRoom(ourNeighbour) != null)
+								{
+									doorCell = myNeighbours[i];
+									doorDir = j;
+									isConnected = true;
+									break;
+								}
+							}
+
+						}
+					}
+					else
+					{
+						// just in case
+						if (!isConnected && GetCell(myNeighbours[i]) != null && GetRoom(myNeighbours[i]) != null)
+						{
+							doorCell = coord;
+							doorDir = i;
+							isConnected = true;
+						}
+					}
+
+				}
+				if (valid && isConnected)
+					validRooms.Add(new ValidRoom(coord, rotatedRoom, doorCell, doorDir));
+			}
+		}
+		return validRooms;
+	}
 	public void Regenerate()
 	{
 		rot++;
 		foreach (var cell in cells)
 		{
+			if(cell	 != null)
 			Destroy(cell.gameObject);
 		}
 		foreach (var go in generatedObjects)
@@ -111,6 +201,13 @@ public class LevelGrid : HexGrid
 		return room;
 	}
 
+	protected bool AreRoomsIdentical(byte a, byte b)
+	{
+		byte u_b = (byte)~b;
+		byte ab = (byte)(a | u_b);
+		return (ab | 0x30) == byte.MaxValue;
+	}
+
 	protected bool IsBitSet(byte val, int bit)
 	{
 		byte mask = (byte)(1 << bit);
@@ -129,13 +226,69 @@ public class LevelGrid : HexGrid
 				return (HexRoom)cells[i];
 			}
 			HexRoom room = (HexRoom)Instantiate<HexCell>(cellPrefab);
+			room.gameObject.name = i.ToString();
 			room.walls = new WallType[6]; // dont fucking ask me
 			room.transform.SetParent(transform, false);
 			room.roomId = roomId;
 			room.transform.localPosition = cells[i].transform.localPosition;
 			room.coordinates = coords;
-			room.color = Color.white;
+			room.color = Color.red;
 			roomdictionary.Add(i, room);
+			Destroy(cells[i].gameObject);
+			cells[i] = room;
+			for (int j = 0; j < 6; j++)
+			{
+				if (IsBitSet(neighboursInRoom, j))
+				{
+					var ncoords = coords.GetNeighbours()[j];
+					int ni = IndexFromCoordinates(ncoords);
+					if (cells[ni] != null)
+					{
+						if (rooms.Contains((HexRoom)cells[ni]))
+						{
+							break;
+						}
+						HexRoom nroom = (HexRoom)Instantiate<HexCell>(cellPrefab);
+						nroom.gameObject.name = ni.ToString();
+						nroom.walls = new WallType[6]; // dont fucking ask me
+						nroom.transform.SetParent(transform, false);
+						nroom.roomId = roomId;
+						nroom.transform.localPosition = cells[ni].transform.localPosition;
+						nroom.coordinates = ncoords;
+						nroom.color = Color.red;
+						roomdictionary.Add(ni, nroom);
+						Destroy(cells[ni].gameObject);
+						cells[ni] = nroom;
+					}
+				}
+			}
+
+			return room;
+		}
+		return null;
+	}
+
+	protected HexRoom NewPlaceRoom(HexCoordinates coords, byte neighboursInRoom, int roomId, HexCoordinates doorCell, int doorDir)
+	{
+		int i = IndexFromCoordinates(coords);
+
+		if (cells[i] != null)
+		{
+			if (rooms.Contains((HexRoom)cells[i]))
+			{
+				return (HexRoom)cells[i];
+			}
+			HexRoom room = (HexRoom)Instantiate<HexCell>(cellPrefab);
+			room.gameObject.name = i.ToString();
+			room.walls = new WallType[6]; // dont fucking ask me
+			room.transform.SetParent(transform, false);
+			room.roomId = roomId;
+			room.transform.localPosition = cells[i].transform.localPosition;
+			room.coordinates = coords;
+			room.color = roomId == 0 ? Color.red : Color.blue;
+			roomdictionary.Add(i, room);
+			Destroy(cells[i].gameObject);
+			cells[i] = room;
 			for (int j = 0; j < 6; j++)
 			{
 				if (IsBitSet(neighboursInRoom, j))
@@ -150,18 +303,33 @@ public class LevelGrid : HexGrid
 						}
 						HexRoom nroom = (HexRoom)Instantiate<HexCell>(cellPrefab);
 						nroom.walls = new WallType[6]; // dont fucking ask me
+						nroom.gameObject.name = ni.ToString();
 						nroom.transform.SetParent(transform, false);
 						nroom.roomId = roomId;
 						nroom.transform.localPosition = cells[ni].transform.localPosition;
 						nroom.coordinates = ncoords;
-						nroom.color = Color.white;
+						nroom.color = roomId == 0 ? Color.red : Color.blue;
 						roomdictionary.Add(ni, nroom);
+						Destroy(cells[ni].gameObject);
+						cells[ni] = nroom;
 					}
 				}
 			}
 
-			Destroy(cells[i].gameObject);
-			cells[i] = room;
+			if(GetRoom(doorCell) != null && GetRoom(doorCell).roomId == roomId)
+			{
+				if(GetRoom(doorCell.GetNeighbours()[doorDir]) != null)
+				{
+					GetRoom(doorCell).walls[doorDir] = WallType.Door;
+					GetRoom(doorCell.GetNeighbours()[doorDir]).walls[(doorDir + 3) % 6] = WallType.Door;
+				} else
+				{
+					Debug.LogError($"Cell {doorCell.GetNeighbours()[doorDir]} (Cell {doorCell} direction {doorDir}) invalid to place door");
+				}
+			} else
+			{
+				Debug.LogError($"Cell {doorCell} invalid to place door");
+			}
 			return room;
 		}
 		return null;
@@ -178,6 +346,7 @@ public class LevelGrid : HexGrid
 		player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
 
 		// clear rooms
+		rooms.Clear();
 		roomdictionary.Clear();
 
 		// place the first room in the centre
@@ -188,9 +357,21 @@ public class LevelGrid : HexGrid
 			isFirstLevel = false;
 		}
 		else
-			NewPlaceRoom(coord, RotateRoom(SHORTROOM, rot), 0);
+			NewPlaceRoom(coord, RotateRoom(SHORTROOM, 0), 0);
 
 
+		float startTime = Time.realtimeSinceStartup;
+		byte[] roomTypes = new byte[14] { BIGROOM, MEDIUMROOM, SMALLROOM, LONGROOM, SHORTROOM, CROSSROOM, LCURVEDROOM, RCURVEDROOM,LRHOMBOIDROOM, RRHOMBOIDROOM,
+		SEMIROOM, CRESCENTROOM, BONEROOM, PICKROOM };
+		List<ValidRoom> validRooms = new List<ValidRoom>();
+		for(int i = 0; i < cells.Length; i++)
+		{
+			validRooms.AddRange(FindValidMoves(cells[i].coordinates, roomTypes));
+		}
+		float endTime = Time.realtimeSinceStartup;
+		Debug.Log($"{validRooms.Count} rooms valid out of {cells.Length} cells tested in {(endTime - startTime) * 1000} milliseconds");
+
+		NewPlaceRoom(validRooms[rot].coords, validRooms[rot].roomType, 1, validRooms[rot].doorCell, validRooms[rot].doorDirection);
 		FigureOutWalls();
 		// put the player there
 		player.MoveTo(roomdictionary[IndexFromCoordinates(coord)].transform.position + Vector3.up);
