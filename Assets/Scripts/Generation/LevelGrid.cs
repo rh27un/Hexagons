@@ -102,8 +102,23 @@ public class LevelGrid : HexGrid
 			for (int r = 0; r < 6; r++)
 			{
 				byte rotatedRoom = RotateRoom(room, r);
-				if (r > 0 && AreRoomsIdentical(room, rotatedRoom))
-					continue;
+				if (r > 0)
+				{
+					if (AreRoomsIdentical(room, rotatedRoom))
+					{
+						continue;
+					}
+					else
+					{
+						for (int s = 1; s < r; s++)
+						{
+							if(AreRoomsIdentical(RotateRoom(room, s), rotatedRoom))
+							{
+								continue;
+							}
+						}
+					}
+				}
 				bool valid = true;
 				bool isConnected = false;
 				var myNeighbours = coord.GetNeighbours();
@@ -122,7 +137,7 @@ public class LevelGrid : HexGrid
 						// room has to be connected to another room to be valid
 						if (!isConnected)
 						{
-							// ooh the rare triple-for-loop
+							// ooh the rare quadruple-for-loop
 							// gotta loop through all our neighbours to see 
 
 							var ourNeighbours = myNeighbours[i].GetNeighbours();
@@ -203,9 +218,10 @@ public class LevelGrid : HexGrid
 
 	protected bool AreRoomsIdentical(byte a, byte b)
 	{
-		byte u_b = (byte)~b;
-		byte ab = (byte)(a | u_b);
-		return (ab | 0x30) == byte.MaxValue;
+		byte mask = 0b00111111;
+		byte ma = (byte)(a & mask);
+		byte mb = (byte)(b & mask);
+		return ma == mb;
 	}
 
 	protected bool IsBitSet(byte val, int bit)
