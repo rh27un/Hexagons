@@ -110,13 +110,20 @@ public class LevelGrid : HexGrid
 					}
 					else
 					{
+						bool isIdentical = false;
 						for (int s = 1; s < r; s++)
 						{
 							if(AreRoomsIdentical(RotateRoom(room, s), rotatedRoom))
 							{
-								continue;
+								isIdentical = true;
+								break;
+							} else
+							{
+								isIdentical = false;
 							}
 						}
+						if (isIdentical)
+							continue;
 					}
 				}
 				bool valid = true;
@@ -294,6 +301,7 @@ public class LevelGrid : HexGrid
 			{
 				return (HexRoom)cells[i];
 			}
+			Color colour = UnityEngine.Random.ColorHSV();
 			HexRoom room = (HexRoom)Instantiate<HexCell>(cellPrefab);
 			room.gameObject.name = i.ToString();
 			room.walls = new WallType[6]; // dont fucking ask me
@@ -301,7 +309,7 @@ public class LevelGrid : HexGrid
 			room.roomId = roomId;
 			room.transform.localPosition = cells[i].transform.localPosition;
 			room.coordinates = coords;
-			room.color = roomId == 0 ? Color.red : Color.blue;
+			room.color = roomId == 0 ? Color.red : colour;
 			roomdictionary.Add(i, room);
 			Destroy(cells[i].gameObject);
 			cells[i] = room;
@@ -324,7 +332,7 @@ public class LevelGrid : HexGrid
 						nroom.roomId = roomId;
 						nroom.transform.localPosition = cells[ni].transform.localPosition;
 						nroom.coordinates = ncoords;
-						nroom.color = roomId == 0 ? Color.red : Color.blue;
+						nroom.color = roomId == 0 ? Color.red : colour;
 						roomdictionary.Add(ni, nroom);
 						Destroy(cells[ni].gameObject);
 						cells[ni] = nroom;
@@ -375,19 +383,32 @@ public class LevelGrid : HexGrid
 		else
 			NewPlaceRoom(coord, RotateRoom(SHORTROOM, 0), 0);
 
-
+		int numRooms = 20;
 		float startTime = Time.realtimeSinceStartup;
 		byte[] roomTypes = new byte[14] { BIGROOM, MEDIUMROOM, SMALLROOM, LONGROOM, SHORTROOM, CROSSROOM, LCURVEDROOM, RCURVEDROOM,LRHOMBOIDROOM, RRHOMBOIDROOM,
 		SEMIROOM, CRESCENTROOM, BONEROOM, PICKROOM };
-		List<ValidRoom> validRooms = new List<ValidRoom>();
-		for(int i = 0; i < cells.Length; i++)
+		for (int i = 1; i < numRooms + 1; i++)
 		{
-			validRooms.AddRange(FindValidMoves(cells[i].coordinates, roomTypes));
+			List<ValidRoom> validRooms = new List<ValidRoom>();
+			for (int j = 0; j < cells.Length; j++)
+			{
+				validRooms.AddRange(FindValidMoves(cells[j].coordinates, roomTypes));
+			}
+
+			if (validRooms.Count > 0)
+			{
+				int roomToGenerate = UnityEngine.Random.Range(0, validRooms.Count);
+				NewPlaceRoom(validRooms[roomToGenerate].coords, validRooms[roomToGenerate].roomType, i, validRooms[roomToGenerate].doorCell, validRooms[roomToGenerate].doorDirection);
+			}
+			else
+			{
+				Debug.LogError($"No valid room placements left. {i} rooms generated");
+				break;
+			}
 		}
 		float endTime = Time.realtimeSinceStartup;
-		Debug.Log($"{validRooms.Count} rooms valid out of {cells.Length} cells tested in {(endTime - startTime) * 1000} milliseconds");
+		Debug.Log($"{numRooms} rooms generated in {(endTime - startTime) * 1000} milliseconds");
 
-		NewPlaceRoom(validRooms[rot].coords, validRooms[rot].roomType, 1, validRooms[rot].doorCell, validRooms[rot].doorDirection);
 		FigureOutWalls();
 		// put the player there
 		player.MoveTo(roomdictionary[IndexFromCoordinates(coord)].transform.position + Vector3.up);
