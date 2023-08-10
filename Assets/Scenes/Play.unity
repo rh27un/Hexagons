@@ -5855,6 +5855,9 @@ MonoBehaviour:
   - {fileID: 3905534853282277759, guid: 41a78d9184d6aa041a3aad7bd5c29c42, type: 3}
   exitRoomPrefab: {fileID: 3905534853282277759, guid: dd91f81832a15d84ba600513dd1da4c4,
     type: 3}
+  numberOfRooms: 3
+  roomSpread: 0
+  prefab: {fileID: 2394056473069301980, guid: 3a429c0d3640d7b48939e0235a0ab0ba, type: 3}
 --- !u!4 &1339863884
 Transform:
   m_ObjectHideFlags: 0

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -73,6 +74,13 @@ public class LevelGrid : HexGrid
 	[SerializeField]
 	protected GameObject exitRoomPrefab;
 
+	[SerializeField]
+	[Range(0, 150)]
+	protected int numberOfRooms;
+	[SerializeField]
+	[Range(0, 5)]
+	protected int roomSpread;
+
 	protected WallMesh wallMesh;
 	protected List<LevelCell> levelCells = new List<LevelCell>();
 	protected Dictionary<int, LevelCell> roomdictionary = new Dictionary<int, LevelCell>();
@@ -83,6 +91,8 @@ public class LevelGrid : HexGrid
 	protected bool isFirstLevel = true;
 	int rot = 0;
 
+
+	public GameObject prefab;
 
 	protected List<ValidRoom> rooms = new List<ValidRoom>();
 	// Start is called before the first frame update
@@ -170,7 +180,7 @@ public class LevelGrid : HexGrid
 								// if this neighbouring cell both exists and consists of a room we're connected
 								if (GetCell(ourNeighbour) != null && GetRoom(ourNeighbour) != null)
 								{
-									neighbour = rooms[GetRoom(myNeighbours[i]).roomId];
+									neighbour = rooms[GetRoom(ourNeighbour).roomId];
 									doorCell = myNeighbours[i];
 									doorDir = j;
 									isConnected = true;
@@ -185,6 +195,7 @@ public class LevelGrid : HexGrid
 						// just in case
 						if (!isConnected && GetCell(myNeighbours[i]) != null && GetRoom(myNeighbours[i]) != null)
 						{
+							neighbour = rooms[GetRoom(myNeighbours[i]).roomId];
 							doorCell = coord;
 							doorDir = i;
 							isConnected = true;
@@ -192,7 +203,7 @@ public class LevelGrid : HexGrid
 					}
 
 				}
-				if (valid && isConnected)
+				if (valid && isConnected )
 				{
 					validRooms.Add(new ValidRoom(coord, rotatedRoom, doorCell, doorDir, neighbour.distanceToStart + 1));
 				}
@@ -256,7 +267,7 @@ public class LevelGrid : HexGrid
 		return c > 0;
 	}
 
-	protected LevelCell NewPlaceRoom(HexCoordinates coords, byte neighboursInRoom, int roomId, HexCoordinates doorCell, int doorDir = -1)
+	protected LevelCell NewPlaceRoom(HexCoordinates coords, byte neighboursInRoom, int roomId, ValidRoom roomStruct, HexCoordinates doorCell, int doorDir = -1)
 	{
 		int i = IndexFromCoordinates(coords);
 
@@ -278,6 +289,10 @@ public class LevelGrid : HexGrid
 			roomdictionary.Add(i, room);
 			Destroy(cells[i].gameObject);
 			cells[i] = room;
+			rooms.Add(roomStruct);
+			GameObject spawned = Instantiate(prefab, cells[i].transform.position, Quaternion.identity);
+			spawned/*.transform.GetChild(0)*/.GetComponentInChildren<TMP_Text>().text = roomStruct.distanceToStart.ToString();
+			generatedObjects.Add(spawned);
 			for (int j = 0; j < 6; j++)
 			{
 				if (IsBitSet(neighboursInRoom, j))
@@ -348,18 +363,16 @@ public class LevelGrid : HexGrid
 		var coord = HexCoordinates.FromOffsetCoordinates(width / 2, height / 2);
 		if (isFirstLevel)
 		{
-			NewPlaceRoom(coord, SHORTROOM, 0, HexCoordinates.zero);
-			rooms.Add(new ValidRoom(coord, SHORTROOM, HexCoordinates.zero, -1, 0));
+			NewPlaceRoom(coord, SHORTROOM, 0, new ValidRoom(coord, SHORTROOM, HexCoordinates.zero, -1, 0), HexCoordinates.zero);
 			isFirstLevel = false;
 		}
 		else
-			NewPlaceRoom(coord, RotateRoom(SHORTROOM, 0), 0, HexCoordinates.zero);
+			NewPlaceRoom(coord, RotateRoom(SHORTROOM, 0), 0, new ValidRoom(coord, SHORTROOM, HexCoordinates.zero, -1, 0), HexCoordinates.zero);
 
-		int numRooms = 20;
 		float startTime = Time.realtimeSinceStartup;
 		byte[] roomTypes = new byte[14] { BIGROOM, MEDIUMROOM, SMALLROOM, LONGROOM, SHORTROOM, CROSSROOM, LCURVEDROOM, RCURVEDROOM,LRHOMBOIDROOM, RRHOMBOIDROOM,
 		SEMIROOM, CRESCENTROOM, BONEROOM, PICKROOM };
-		for (int i = 1; i < numRooms + 1; i++)
+		for (int i = 1; i < numberOfRooms + 1; i++)
 		{
 			List<ValidRoom> validRooms = new List<ValidRoom>();
 			for (int j = 0; j < cells.Length; j++)
@@ -369,9 +382,10 @@ public class LevelGrid : HexGrid
 
 			if (validRooms.Count > 0)
 			{
-				int roomToGenerate = UnityEngine.Random.Range(0, validRooms.Count);
-				NewPlaceRoom(validRooms[roomToGenerate].coords, validRooms[roomToGenerate].roomShape, i, validRooms[roomToGenerate].doorCell, validRooms[roomToGenerate].doorDirection);
-				rooms.Add(validRooms[roomToGenerate]);
+				int nearestRoom = validRooms.Min(r => r.distanceToStart);
+				var nearestRooms = validRooms.Where(r => r.distanceToStart <= nearestRoom + roomSpread).ToList();
+				int roomToGenerate = UnityEngine.Random.Range(0, nearestRooms.Count());
+				NewPlaceRoom(nearestRooms[roomToGenerate].coords, nearestRooms[roomToGenerate].roomShape, i, nearestRooms[roomToGenerate], nearestRooms[roomToGenerate].doorCell, nearestRooms[roomToGenerate].doorDirection);
 			}
 			else
 			{
@@ -380,7 +394,7 @@ public class LevelGrid : HexGrid
 			}
 		}
 		float endTime = Time.realtimeSinceStartup;
-		Debug.Log($"{numRooms} rooms generated in {(endTime - startTime) * 1000} milliseconds");
+		Debug.Log($"{numberOfRooms} rooms generated in {(endTime - startTime) * 1000} milliseconds");
 
 		FigureOutWalls();
 		// put the player there
