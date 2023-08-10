@@ -61,6 +61,8 @@ public class GameManager : MonoBehaviour
 		69f,
 		102f
 	};
+
+	private Vector3 mapCamOffset;
 	private void Awake()
 	{
 		//DontDestroyOnLoad(gameObject);  why?
@@ -69,6 +71,7 @@ public class GameManager : MonoBehaviour
 		skillGrid.defaultCardData = deck.Cards[defaultCardIndex];
 		editor = hand.transform.parent.GetComponent<HexMapEditor>();
 		player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+		mapCamOffset = mapCam.transform.position - player.transform.position;
 		//foreach (var card in deck.Cards)
 		//{
 		//	editor.AddCardToHand(card);
@@ -145,6 +148,7 @@ public class GameManager : MonoBehaviour
 				}
 				else
 					playCam.SetActive(false);
+				mapCam.transform.position = player.transform.position + mapCamOffset;
 				Time.timeScale = 0f;
 				isPaused = true;
 				isInMap = true;

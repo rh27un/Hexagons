@@ -47,7 +47,7 @@ public class WallMesh : MonoBehaviour
 		secretTriangles = new List<int>();
 	}
 
-	public void Triangulate(HexRoom[] rooms)
+	public void Triangulate(LevelCell[] rooms)
 	{
 		wallMesh.Clear();
 		doorMesh.Clear();
@@ -83,7 +83,7 @@ public class WallMesh : MonoBehaviour
 		secretCollider.sharedMesh = secretMesh;
 	}
 
-	void Triangulate(HexRoom room)
+	void Triangulate(LevelCell room)
 	{
 		for (int i = 0; i < 6; i++)
 		{
@@ -102,7 +102,7 @@ public class WallMesh : MonoBehaviour
 		}
 	}
 
-	void Triangulate(HexRoom room, int wall)
+	void Triangulate(LevelCell room, int wall)
 	{
 		Vector3 center = room.transform.localPosition;
 
@@ -139,7 +139,7 @@ public class WallMesh : MonoBehaviour
 		colors.Add(color);
 	}
 
-	void DoorTriangulate(HexRoom room, int wall)
+	void DoorTriangulate(LevelCell room, int wall)
 	{
 		Vector3 center = room.transform.localPosition;
 
@@ -175,7 +175,7 @@ public class WallMesh : MonoBehaviour
 		doorColors.Add(color);
 		doorColors.Add(color);
 	}
-	void SecretTriangulate(HexRoom room, int wall)
+	void SecretTriangulate(LevelCell room, int wall)
 	{
 		Vector3 center = room.transform.localPosition;
 

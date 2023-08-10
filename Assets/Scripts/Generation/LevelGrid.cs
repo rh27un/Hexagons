@@ -7,18 +7,29 @@ using UnityEngine.UI;
 
 public struct ValidRoom
 {
-	public ValidRoom(HexCoordinates _coords, byte _roomType, HexCoordinates _doorCell, int _doorDirection)
+	public ValidRoom(HexCoordinates _coords, byte _roomShape, HexCoordinates _doorCell, int _doorDirection, int _distanceToStart)
 	{
 		coords = _coords;
-		roomType = _roomType;
+		roomShape = _roomShape;
 		doorCell = _doorCell;
 		doorDirection = _doorDirection;
+		distanceToStart = _distanceToStart;
+	}
+
+	public ValidRoom(HexCoordinates _coords, byte _roomShape, int _distanceToStart)
+	{
+		coords = _coords;
+		roomShape = _roomShape;
+		doorCell = HexCoordinates.zero;
+		doorDirection = -1;
+		distanceToStart = _distanceToStart;
 	}
 
 	public HexCoordinates coords;
-	public byte roomType;
+	public byte roomShape;
 	public HexCoordinates doorCell;
 	public int doorDirection;
+	public int distanceToStart;
 }
 
 public class LevelGrid : HexGrid
@@ -63,14 +74,17 @@ public class LevelGrid : HexGrid
 	protected GameObject exitRoomPrefab;
 
 	protected WallMesh wallMesh;
-	protected List<HexRoom> rooms = new List<HexRoom>();
-	protected Dictionary<int, HexRoom> roomdictionary = new Dictionary<int, HexRoom>();
+	protected List<LevelCell> levelCells = new List<LevelCell>();
+	protected Dictionary<int, LevelCell> roomdictionary = new Dictionary<int, LevelCell>();
 	protected List<GameObject> generatedObjects = new List<GameObject>();
 	protected Player player;
 	protected LevelName levelName;
 	protected GameManager gameManager;
 	protected bool isFirstLevel = true;
 	int rot = 0;
+
+
+	protected List<ValidRoom> rooms = new List<ValidRoom>();
 	// Start is called before the first frame update
 	protected override void Start()
 	{
@@ -97,7 +111,8 @@ public class LevelGrid : HexGrid
 			return validRooms;
 		HexCoordinates doorCell = new HexCoordinates();
 		int doorDir = 0;
-		foreach(byte room in roomsToTry)
+		ValidRoom neighbour = new ValidRoom();
+		foreach (byte room in roomsToTry)
 		{
 			for (int r = 0; r < 6; r++)
 			{
@@ -155,6 +170,7 @@ public class LevelGrid : HexGrid
 								// if this neighbouring cell both exists and consists of a room we're connected
 								if (GetCell(ourNeighbour) != null && GetRoom(ourNeighbour) != null)
 								{
+									neighbour = rooms[GetRoom(myNeighbours[i]).roomId];
 									doorCell = myNeighbours[i];
 									doorDir = j;
 									isConnected = true;
@@ -177,7 +193,9 @@ public class LevelGrid : HexGrid
 
 				}
 				if (valid && isConnected)
-					validRooms.Add(new ValidRoom(coord, rotatedRoom, doorCell, doorDir));
+				{
+					validRooms.Add(new ValidRoom(coord, rotatedRoom, doorCell, doorDir, neighbour.distanceToStart + 1));
+				}
 			}
 		}
 		return validRooms;
@@ -238,71 +256,18 @@ public class LevelGrid : HexGrid
 		return c > 0;
 	}
 
-	protected HexRoom NewPlaceRoom(HexCoordinates coords, byte neighboursInRoom, int roomId)
+	protected LevelCell NewPlaceRoom(HexCoordinates coords, byte neighboursInRoom, int roomId, HexCoordinates doorCell, int doorDir = -1)
 	{
 		int i = IndexFromCoordinates(coords);
 
 		if (cells[i] != null)
 		{
-			if (rooms.Contains((HexRoom)cells[i]))
+			if (levelCells.Contains((LevelCell)cells[i]))
 			{
-				return (HexRoom)cells[i];
-			}
-			HexRoom room = (HexRoom)Instantiate<HexCell>(cellPrefab);
-			room.gameObject.name = i.ToString();
-			room.walls = new WallType[6]; // dont fucking ask me
-			room.transform.SetParent(transform, false);
-			room.roomId = roomId;
-			room.transform.localPosition = cells[i].transform.localPosition;
-			room.coordinates = coords;
-			room.color = Color.red;
-			roomdictionary.Add(i, room);
-			Destroy(cells[i].gameObject);
-			cells[i] = room;
-			for (int j = 0; j < 6; j++)
-			{
-				if (IsBitSet(neighboursInRoom, j))
-				{
-					var ncoords = coords.GetNeighbours()[j];
-					int ni = IndexFromCoordinates(ncoords);
-					if (cells[ni] != null)
-					{
-						if (rooms.Contains((HexRoom)cells[ni]))
-						{
-							break;
-						}
-						HexRoom nroom = (HexRoom)Instantiate<HexCell>(cellPrefab);
-						nroom.gameObject.name = ni.ToString();
-						nroom.walls = new WallType[6]; // dont fucking ask me
-						nroom.transform.SetParent(transform, false);
-						nroom.roomId = roomId;
-						nroom.transform.localPosition = cells[ni].transform.localPosition;
-						nroom.coordinates = ncoords;
-						nroom.color = Color.red;
-						roomdictionary.Add(ni, nroom);
-						Destroy(cells[ni].gameObject);
-						cells[ni] = nroom;
-					}
-				}
-			}
-
-			return room;
-		}
-		return null;
-	}
-
-	protected HexRoom NewPlaceRoom(HexCoordinates coords, byte neighboursInRoom, int roomId, HexCoordinates doorCell, int doorDir)
-	{
-		int i = IndexFromCoordinates(coords);
-
-		if (cells[i] != null)
-		{
-			if (rooms.Contains((HexRoom)cells[i]))
-			{
-				return (HexRoom)cells[i];
+				return (LevelCell)cells[i];
 			}
 			Color colour = UnityEngine.Random.ColorHSV();
-			HexRoom room = (HexRoom)Instantiate<HexCell>(cellPrefab);
+			LevelCell room = (LevelCell)Instantiate<HexCell>(cellPrefab);
 			room.gameObject.name = i.ToString();
 			room.walls = new WallType[6]; // dont fucking ask me
 			room.transform.SetParent(transform, false);
@@ -321,11 +286,11 @@ public class LevelGrid : HexGrid
 					int ni = IndexFromCoordinates(ncoords);
 					if (cells[ni] != null)
 					{
-						if (rooms.Contains((HexRoom)cells[ni]))
+						if (levelCells.Contains((LevelCell)cells[ni]))
 						{
 							break;
 						}
-						HexRoom nroom = (HexRoom)Instantiate<HexCell>(cellPrefab);
+						LevelCell nroom = (LevelCell)Instantiate<HexCell>(cellPrefab);
 						nroom.walls = new WallType[6]; // dont fucking ask me
 						nroom.gameObject.name = ni.ToString();
 						nroom.transform.SetParent(transform, false);
@@ -340,19 +305,24 @@ public class LevelGrid : HexGrid
 				}
 			}
 
-			if(GetRoom(doorCell) != null && GetRoom(doorCell).roomId == roomId)
+			if (doorDir > -1)
 			{
-				if(GetRoom(doorCell.GetNeighbours()[doorDir]) != null)
+				if (GetRoom(doorCell) != null && GetRoom(doorCell).roomId == roomId)
 				{
-					GetRoom(doorCell).walls[doorDir] = WallType.Door;
-					GetRoom(doorCell.GetNeighbours()[doorDir]).walls[(doorDir + 3) % 6] = WallType.Door;
-				} else
-				{
-					Debug.LogError($"Cell {doorCell.GetNeighbours()[doorDir]} (Cell {doorCell} direction {doorDir}) invalid to place door");
+					if (GetRoom(doorCell.GetNeighbours()[doorDir]) != null)
+					{
+						GetRoom(doorCell).walls[doorDir] = WallType.Door;
+						GetRoom(doorCell.GetNeighbours()[doorDir]).walls[(doorDir + 3) % 6] = WallType.Door;
+					}
+					else
+					{
+						Debug.LogError($"Cell {doorCell.GetNeighbours()[doorDir]} (Cell {doorCell} direction {doorDir}) invalid to place door");
+					}
 				}
-			} else
-			{
-				Debug.LogError($"Cell {doorCell} invalid to place door");
+				else
+				{
+					Debug.LogError($"Cell {doorCell} invalid to place door");
+				}
 			}
 			return room;
 		}
@@ -370,18 +340,20 @@ public class LevelGrid : HexGrid
 		player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
 
 		// clear rooms
-		rooms.Clear();
+		levelCells.Clear();
 		roomdictionary.Clear();
+		rooms.Clear();
 
 		// place the first room in the centre
 		var coord = HexCoordinates.FromOffsetCoordinates(width / 2, height / 2);
 		if (isFirstLevel)
 		{
-			NewPlaceRoom(coord, SHORTROOM, 0);
+			NewPlaceRoom(coord, SHORTROOM, 0, HexCoordinates.zero);
+			rooms.Add(new ValidRoom(coord, SHORTROOM, HexCoordinates.zero, -1, 0));
 			isFirstLevel = false;
 		}
 		else
-			NewPlaceRoom(coord, RotateRoom(SHORTROOM, 0), 0);
+			NewPlaceRoom(coord, RotateRoom(SHORTROOM, 0), 0, HexCoordinates.zero);
 
 		int numRooms = 20;
 		float startTime = Time.realtimeSinceStartup;
@@ -398,7 +370,8 @@ public class LevelGrid : HexGrid
 			if (validRooms.Count > 0)
 			{
 				int roomToGenerate = UnityEngine.Random.Range(0, validRooms.Count);
-				NewPlaceRoom(validRooms[roomToGenerate].coords, validRooms[roomToGenerate].roomType, i, validRooms[roomToGenerate].doorCell, validRooms[roomToGenerate].doorDirection);
+				NewPlaceRoom(validRooms[roomToGenerate].coords, validRooms[roomToGenerate].roomShape, i, validRooms[roomToGenerate].doorCell, validRooms[roomToGenerate].doorDirection);
+				rooms.Add(validRooms[roomToGenerate]);
 			}
 			else
 			{
@@ -447,7 +420,7 @@ public class LevelGrid : HexGrid
 			gameManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
 
 		// clear rooms
-		rooms.Clear();
+		levelCells.Clear();
 
 		// find player
 		player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
@@ -456,14 +429,14 @@ public class LevelGrid : HexGrid
 		var coord = HexCoordinates.FromOffsetCoordinates(width / 2, height / 2);
 		if (isFirstLevel)
 		{
-			rooms.Add(PlaceRoom(coord, spawnRoomPrefab, true));
+			levelCells.Add(PlaceRoom(coord, spawnRoomPrefab, true));
 			isFirstLevel = false;
 		}
 		else
-			rooms.Add(PlaceRoom(coord, null, true));
+			levelCells.Add(PlaceRoom(coord, null, true));
 
 		// put the player there
-		player.MoveTo(rooms[0].transform.position + Vector3.up);
+		player.MoveTo(levelCells[0].transform.position + Vector3.up);
 
 		// generate paths from the start
 		for(int i = 0; i < branchesPerPath; i++)
@@ -472,7 +445,7 @@ public class LevelGrid : HexGrid
 		}
 
 		// find rooms with empty neighbours
-		var perimiterRooms = rooms.Where(r => r.coordinates.GetNeighbours().Any(n => !rooms.Contains((HexRoom)GetCell(n)) && IndexFromCoordinates(n) <= width * height)).ToArray();
+		var perimiterRooms = levelCells.Where(r => r.coordinates.GetNeighbours().Any(n => !levelCells.Contains((LevelCell)GetCell(n)) && IndexFromCoordinates(n) <= width * height)).ToArray();
 		if (perimiterRooms.Length == 0) {
 			Debug.LogError("No rooms with empty neighbours, leave extra space for secret room & exit room");
 			return;
@@ -485,7 +458,7 @@ public class LevelGrid : HexGrid
 		int d = UnityEngine.Random.Range(0, 6), s = d;
 
 		// if it isn't empty, cycle through neighbours clockwise until we get one that is
-		while (rooms.Contains((HexRoom)GetCell(neighbours[d])) || IndexFromCoordinates(neighbours[d]) > width * height)
+		while (levelCells.Contains((LevelCell)GetCell(neighbours[d])) || IndexFromCoordinates(neighbours[d]) > width * height)
 		{
 			d = (d + 1) % 6;
 			if (d == s)
@@ -503,17 +476,17 @@ public class LevelGrid : HexGrid
 		bossRoom.walls[d] = WallType.Door;
 		exitRoom.walls[(d + 3) % 6] = WallType.Door;
 
-		rooms.Add(exitRoom);
+		levelCells.Add(exitRoom);
 
 		// select one at random to be entrance to secret room
-		var secretEntrance = perimiterRooms.Where(r => r.coordinates.GetNeighbours().Any(n => !rooms.Contains((HexRoom)GetCell(n)) && IndexFromCoordinates(n) <= width * height)).ToArray()[UnityEngine.Random.Range(0, perimiterRooms.Length - 1)];
+		var secretEntrance = perimiterRooms.Where(r => r.coordinates.GetNeighbours().Any(n => !levelCells.Contains((LevelCell)GetCell(n)) && IndexFromCoordinates(n) <= width * height)).ToArray()[UnityEngine.Random.Range(0, perimiterRooms.Length - 1)];
 
 		// select a random neighbour to be the secret room
 		neighbours = secretEntrance.coordinates.GetNeighbours();
 		d = UnityEngine.Random.Range(0, 6); s = d;
 
 		// if it isn't empty, cycle through neighbours clockwise until we get one that is
-		while (rooms.Contains((HexRoom)GetCell(neighbours[d])) || IndexFromCoordinates(neighbours[d]) > width * height)
+		while (levelCells.Contains((LevelCell)GetCell(neighbours[d])) || IndexFromCoordinates(neighbours[d]) > width * height)
 		{
 			d = (d + 1) % 6;
 			if (d == s)
@@ -530,13 +503,13 @@ public class LevelGrid : HexGrid
 		secretEntrance.walls[d] = WallType.Secret;
 		secretRoom.walls[(d + 3) % 6] = WallType.Secret;
 
-		rooms.Add(secretRoom);
+		levelCells.Add(secretRoom);
 
 		//var lastPrefab = generatedObjects[generatedObjects.Count - 1];
 		//var newPrefab = Instantiate(exitRoomPrefab, lastPrefab.transform.position, Quaternion.identity);
 		//Destroy(lastPrefab);
 		//generatedObjects.Add(newPrefab);
-		FillRooms(rooms[0].coordinates, secretRoom.coordinates, bossRoom.coordinates, exitRoom.coordinates);
+		FillRooms(levelCells[0].coordinates, secretRoom.coordinates, bossRoom.coordinates, exitRoom.coordinates);
 		levelName.NextLevel();
 		gameManager.NextLevel();
 	}
@@ -548,11 +521,11 @@ public class LevelGrid : HexGrid
 		generatedObjects.Add(Instantiate(bossRoomPrefabs[UnityEngine.Random.Range(0, bossRoomPrefabs.Count)], GetPositionFromCoordinates(boss), Quaternion.identity));
 		generatedObjects.Add(Instantiate(exitRoomPrefab, GetPositionFromCoordinates(exit), Quaternion.identity));
 
-		for(int i = 0; i < rooms.Count; i++)
+		for(int i = 0; i < levelCells.Count; i++)
 		{
-			if (rooms[i].coordinates != start && rooms[i].coordinates != secret && rooms[i].coordinates != boss && rooms[i].coordinates != exit)
+			if (levelCells[i].coordinates != start && levelCells[i].coordinates != secret && levelCells[i].coordinates != boss && levelCells[i].coordinates != exit)
 			{
-				generatedObjects.Add(Instantiate(roomPrefabs[UnityEngine.Random.Range(0, roomPrefabs.Count)], GetPositionFromCoordinates(rooms[i].coordinates), Quaternion.identity));
+				generatedObjects.Add(Instantiate(roomPrefabs[UnityEngine.Random.Range(0, roomPrefabs.Count)], GetPositionFromCoordinates(levelCells[i].coordinates), Quaternion.identity));
 			}
 		}
 	}
@@ -565,10 +538,10 @@ public class LevelGrid : HexGrid
 		for (int i = 0; i <= numRooms; i++)
 		{
 			// place room
-			HexRoom room;
+			LevelCell room;
 			room = PlaceRoom(coord, null);
-			if(!rooms.Contains(room))
-				rooms.Add(room);
+			if(!levelCells.Contains(room))
+				levelCells.Add(room);
 
 			// open path to previous room
 			if(i > 0)
@@ -598,7 +571,7 @@ public class LevelGrid : HexGrid
 			r = s = UnityEngine.Random.Range(0, 6);
 
 			// if it isn't empty, cycle through neighbours clockwise until we get one that is
-			while(rooms.Contains((HexRoom)GetCell(neighbours[r])) || IndexFromCoordinates(neighbours[r]) > width * height)
+			while(levelCells.Contains((LevelCell)GetCell(neighbours[r])) || IndexFromCoordinates(neighbours[r]) > width * height)
 			{
 				r = (r + 1) % 6;
 				if(r == s)
@@ -617,17 +590,17 @@ public class LevelGrid : HexGrid
 		}
 	}
 
-	public HexRoom PlaceRoom(HexCoordinates coordinates, GameObject prefab, bool white = false)
+	public LevelCell PlaceRoom(HexCoordinates coordinates, GameObject prefab, bool white = false)
 	{
 		int i = IndexFromCoordinates(coordinates);
 		
 		if (cells[i] != null)
 		{
-			if (rooms.Contains((HexRoom)cells[i]))
+			if (levelCells.Contains((LevelCell)cells[i]))
 			{
-				return (HexRoom)cells[i];
+				return (LevelCell)cells[i];
 			}
-			HexRoom room = (HexRoom)Instantiate<HexCell>(cellPrefab);
+			LevelCell room = (LevelCell)Instantiate<HexCell>(cellPrefab);
 			room.walls = new WallType[6]; // dont fucking ask me
 			room.transform.SetParent(transform, false);
 			room.transform.localPosition = cells[i].transform.localPosition;
@@ -649,7 +622,7 @@ public class LevelGrid : HexGrid
 
 	private void CalculateWalls()
 	{
-		foreach(var room in rooms)
+		foreach(var room in levelCells)
 		{
 			if (room == null)
 				continue;
@@ -670,7 +643,7 @@ public class LevelGrid : HexGrid
 		}
 	}
 
-	public HexRoom GetRoom(HexCoordinates coordinates)
+	public LevelCell GetRoom(HexCoordinates coordinates)
 	{
 		int index = IndexFromCoordinates(coordinates);
 		if (!roomdictionary.ContainsKey(index))

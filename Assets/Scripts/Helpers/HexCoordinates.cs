@@ -83,4 +83,6 @@ public struct HexCoordinates {
 
 	public static bool operator ==(HexCoordinates lhs, HexCoordinates rhs) => lhs.X == rhs.X && lhs.Y == rhs.Y && lhs.Z == rhs.Z;
 	public static bool operator !=(HexCoordinates lhs, HexCoordinates rhs) => !lhs.Equals(rhs);
+
+	public static HexCoordinates zero = new HexCoordinates(0, 0);
 }

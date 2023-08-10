@@ -9,7 +9,7 @@ public enum WallType
 	Door,
 	Secret
 }
-public class HexRoom : HexCell
+public class LevelCell : HexCell
 {
 	public WallType[] walls = new WallType[6];
 	public int roomId;
